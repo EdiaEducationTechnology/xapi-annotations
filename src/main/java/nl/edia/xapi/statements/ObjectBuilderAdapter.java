@@ -14,6 +14,11 @@
  */
 package nl.edia.xapi.statements;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 
 import gov.adlnet.xapi.model.Actor;
@@ -21,6 +26,7 @@ import gov.adlnet.xapi.model.Context;
 import gov.adlnet.xapi.model.IStatementObject;
 import gov.adlnet.xapi.model.Result;
 import gov.adlnet.xapi.model.Verb;
+import gov.adlnet.xapi.model.Verbs;
 
 /**
  * Adapter class for the {@link ObjectBuilder}.
@@ -33,6 +39,11 @@ public abstract class ObjectBuilderAdapter implements ObjectBuilder {
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 4045556449663328682L;
+	
+	/**
+	 * The logging facility.
+	 */
+	private static final Log LOG = LogFactory.getLog(ObjectBuilderAdapter.class);
 
 	/* (non-Javadoc)
 	 * @see nl.edia.xapi.statements.ObjectBuilder#build(java.lang.Object, java.lang.Class)
@@ -41,22 +52,50 @@ public abstract class ObjectBuilderAdapter implements ObjectBuilder {
 	@Override
 	public <T> T build(Object value, Class<T> clazz) {
 		Assert.notNull(clazz, "The clazz parameter may never be null");
-		if (clazz.isAssignableFrom(IStatementObject.class)) {
-			return (T) buildActivity(value);
-		}
+		// Actor, verb and activity are required
 		if (clazz.isAssignableFrom(Actor.class)) {
 			return (T) buildActor(value);
 		}
+		if (clazz.isAssignableFrom(Verb.class)) {
+			return (T) buildVerb(value);
+		}
+		if (clazz.isAssignableFrom(IStatementObject.class)) {
+			return (T) buildActivity(value);
+		}
+		// Not required.
 		if (clazz.isAssignableFrom(Context.class)) {
 			return (T) buildContext(value);
 		}
 		if (clazz.isAssignableFrom(Result.class)) {
 			return (T) buildResult(value);
 		}
-		if (clazz.isAssignableFrom(Verb.class)) {
-			return (T) buildVerb(value);
+		return null;
+	}
+
+	/**
+	 * Builds the {@link Actor} object.
+	 * @param value the parameter value.
+	 * @return the value represented as {@link Actor}.
+	 */
+	protected abstract Actor buildActor(Object value);
+
+	/**
+	 * Builds the {@link Verb} object.
+	 * @param value the parameter value.
+	 * @return the value represented as {@link Verb}.
+	 */
+	protected Verb buildVerb(Object value){
+		if (value instanceof String) {
+			String event = (String) value;
+			try {
+				Method method = Verbs.class.getMethod(event);
+				return (Verb) method.invoke(null, new Object[]{});
+			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				LOG.error("Error creating verb", e);
+			}
 		}
 		return null;
+
 	}
 
 	/**
@@ -67,31 +106,23 @@ public abstract class ObjectBuilderAdapter implements ObjectBuilder {
 	protected abstract IStatementObject buildActivity(Object value);
 
 	/**
-	 * Builds the {@link Actor} object.
-	 * @param value the parameter value.
-	 * @return the value represented as {@link Actor}.
-	 */
-	protected abstract Actor buildActor(Object value);
-
-	/**
 	 * Builds the {@link Context} object.
 	 * @param value the parameter value.
 	 * @return the value represented as {@link Context}.
 	 */
-	protected abstract Context buildContext(Object value);
+	protected Context buildContext(Object value){
+		// Adapter implementation returns null
+		return null; 
+	};
 
 	/**
 	 * Builds the {@link Result} object.
 	 * @param value the parameter value.
 	 * @return the value represented as {@link Result}.
 	 */
-	protected abstract Result buildResult(Object value);
-
-	/**
-	 * Builds the {@link Verb} object.
-	 * @param value the parameter value.
-	 * @return the value represented as {@link Verb}.
-	 */
-	protected abstract Verb buildVerb(Object value);
+	protected Result buildResult(Object value){ 
+		// Adapter implementation returns null
+		return null; 
+	}
 
 }

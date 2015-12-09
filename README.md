@@ -55,8 +55,8 @@ Put the annotation on the business methods in your application, the @Actor and @
 ## Implement the ObjectBuilder for your domain
 Implement your own ObjectBuilder from business objects to XAPI entities, expose the builder as a spring bean.
 ```
-@Component
-public class MyObjectBuilder extends ObjectBuilderAdapter {
+  @Component
+  public class MyObjectBuilder extends ObjectBuilderAdapter {
 	@Override
 	protected Actor buildActor(Object value) {
 		Agent actor = new Agent();
@@ -70,7 +70,7 @@ public class MyObjectBuilder extends ObjectBuilderAdapter {
 		// Populate the activity properties with the value object.
 		return activity;
 	}
-}
+  }
 ```
 
 ## Configure the endpoint
@@ -84,7 +84,7 @@ Configure the StatementClient as statement endpoint
 ```
 Or with annotations
 ```
-@Bean StatementClient statementClient() {
-  return new StatementClient("http://example.com/xapi/", "username", "password");
-}
+  @Bean StatementClient statementClient() {
+    return new StatementClient("http://example.com/xapi/", "username", "password");
+  }
 ```

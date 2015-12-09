@@ -82,6 +82,20 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 	</build>
+	<scm>
+		<url>scm:git:https://github.com/EdiaEducationTechnology/xapi-annotations.git</url>
+		<connection>scm:git:https://github.com/EdiaEducationTechnology/xapi-annotations.git</connection>
+		<tag>master</tag>
+	</scm>
+	<distributionManagement>
+		<repository>
+			<id>public</id>
+			<url>http://nexus.edia.nl/nexus/content/repositories/public</url>
+		</repository>
+		<snapshotRepository>
+			<id>public-snapshots</id>
+			<url>http://nexus.edia.nl/nexus/content/repositories/public-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

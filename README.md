@@ -51,6 +51,14 @@ Put the annotation on the business methods in your application, the @Actor and @
 		// ...
 	}
 ```
+Note that the return type is also allowed as annotation.
+```
+	@Statement(verb = "experienced")
+	public @StatementObject Text readText(@Actor User user, @Context Course course) {
+		// ...
+	}
+```
+
 
 ## Implement the ObjectBuilder for your domain
 Implement your own ObjectBuilder from business objects to XAPI entities, expose the builder as a spring bean.

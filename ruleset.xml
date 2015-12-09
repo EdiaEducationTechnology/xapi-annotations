@@ -13,16 +13,17 @@
 	</rule>
 	<rule ref="rulesets/java/design.xml">
 		<exclude name="CloseResource" />
-		<exclude name="MissingStaticMethodInNonInstantiatableClass" />
 		<exclude name="AbstractClassWithoutAnyMethod" />
+		<exclude name="EmptyMethodInAbstractClassShouldBeAbstract" />
+		<exclude name="MissingStaticMethodInNonInstantiatableClass" />
 	</rule>
 	<rule ref="rulesets/java/braces.xml" />
 	<rule ref="rulesets/java/strings.xml" />
 	<rule ref="rulesets/java/imports.xml" />
 	<rule ref="rulesets/java/unnecessary.xml" />
 	<rule ref="rulesets/java/optimizations.xml">
-		<exclude name="MethodArgumentCouldBeFinal" />
 		<exclude name="LocalVariableCouldBeFinal" />
+		<exclude name="MethodArgumentCouldBeFinal" />
 	</rule>
 	<rule ref="rulesets/java/empty.xml" />
 	<rule ref="rulesets/java/sunsecure.xml" />

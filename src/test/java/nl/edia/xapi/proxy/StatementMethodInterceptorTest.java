@@ -154,8 +154,8 @@ public class StatementMethodInterceptorTest extends StatementMethodInterceptor {
 				return "OK";
 			}
 		});
-		assertTrue(latch.await(10, TimeUnit.SECONDS));
 		invoke(mock);
+		assertTrue(latch.await(10, TimeUnit.SECONDS));
 		verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
 		verify(statementClient, Mockito.times(1)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
 

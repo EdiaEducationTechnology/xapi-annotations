@@ -14,8 +14,15 @@
  */
 package nl.edia.xapi.proxy;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Assert;
@@ -23,10 +30,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -41,12 +48,10 @@ import nl.edia.xapi.proxy.domain.Module;
 import nl.edia.xapi.proxy.domain.Text;
 import nl.edia.xapi.proxy.domain.User;
 import nl.edia.xapi.proxy.impl.TestObjectBuilder;
-import nl.edia.xapi.proxy.impl.TestStatementClientFactory;
 import nl.edia.xapi.statements.DefaultStatementBuilder;
 import nl.edia.xapi.statements.DefaultStatementClientFactory;
 import nl.edia.xapi.statements.NullObjectBuilder;
 import nl.edia.xapi.statements.ObjectBuilder;
-import nl.edia.xapi.statements.StatementClientFactory;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class, classes={TestConfiguration.class})
@@ -57,7 +62,7 @@ public class StatementMethodInterceptorTest extends StatementMethodInterceptor {
 	 */
 	private static final long serialVersionUID = 3705560407788286073L;
 	
-	StatementClient statementClient;
+	protected StatementClient statementClient;
 
 	protected class LeaningAnalyticsMethodInterceptorTestTarget {
 		public void doSomeThing0a() {
@@ -120,93 +125,100 @@ public class StatementMethodInterceptorTest extends StatementMethodInterceptor {
 	@Test
 	public void test0a() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing0a"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] {});
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing0a"));
+		when(mock.getArguments()).thenReturn(new Object[] {});
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
 	}
 	@Test
 	public void test0b() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing0b"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] {});
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing0b"));
+		when(mock.getArguments()).thenReturn(new Object[] {});
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
 	}
 
 	@Test
 	public void test1a() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1a"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
-		Assert.assertTrue(isaSync());
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing1a"));
+		when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		assertTrue(isaSync());
+		final CountDownLatch latch = new CountDownLatch(1);
+		when(statementClient.postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class))).then(new Answer<String>() {
+
+			@Override
+			public String answer(InvocationOnMock invocation) throws Throwable {
+				latch.countDown();
+				return "OK";
+			}
+		});
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
-		synchronized (this) {
-			Thread.currentThread().sleep(1000);
-		}
-		Mockito.verify(statementClient, Mockito.times(1)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
+		assertTrue(latch.await(10, TimeUnit.SECONDS));
+		verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
+		verify(statementClient, Mockito.times(1)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
 
 		// Without sync
 		setaSync(false);
-		Assert.assertFalse(isaSync());
+		assertFalse(isaSync());
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(2)).build(Mockito.eq(mock), Mockito.any());
-		Mockito.verify(statementClient, Mockito.times(2)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
+		verify(this.statementClientFactory, Mockito.times(2)).build(Mockito.eq(mock), Mockito.any());
+		verify(statementClient, Mockito.times(2)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
 
 		
-		Mockito.when(statementClient.postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class))).thenThrow(IOException.class);
+		when(statementClient.postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class))).thenThrow(IOException.class);
 		// Try an exception async false
 		setaSync(false);
-		Assert.assertFalse(isaSync());
+		assertFalse(isaSync());
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(3)).build(Mockito.eq(mock), Mockito.any());
-		Mockito.verify(statementClient, Mockito.times(3)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
+		verify(this.statementClientFactory, Mockito.times(3)).build(Mockito.eq(mock), Mockito.any());
+		verify(statementClient, Mockito.times(3)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
 		// Try an exception async true
 		setaSync(true);
-		Assert.assertTrue(isaSync());
+		assertTrue(isaSync());
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(4)).build(Mockito.eq(mock), Mockito.any());
-		Mockito.verify(statementClient, Mockito.times(4)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
+		verify(this.statementClientFactory, Mockito.times(4)).build(Mockito.eq(mock), Mockito.any());
+		verify(statementClient, Mockito.times(4)).postStatement(Mockito.any(gov.adlnet.xapi.model.Statement.class));
 
 	}
 	@Test
 	public void test1b() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1b"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing1b"));
+		when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
 	}
 
 	@Test
 	public void test1c() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1c"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing1c"));
+		when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
 	}
 	
 	@Test
 	public void test1d() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1d"));
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing1d"));
+		when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
 	}
 	
 	@Test
 	public void testa4a() throws Throwable {
 		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
-		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing4a"));
+		when(mock.getMethod()).thenReturn(getMethod("doSomeThing4a"));
 		Text text = Mockito.mock(Text.class);
-		Mockito.when(text.getId()).thenReturn(12L);
-		Mockito.when(text.getLocation()).thenReturn("http://somwehere.com");
-		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), text, Mockito.mock(Course.class),  Mockito.mock(Module.class) });
+		when(text.getId()).thenReturn(12L);
+		when(text.getLocation()).thenReturn("http://somwehere.com");
+		when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), text, Mockito.mock(Course.class),  Mockito.mock(Module.class) });
 		invoke(mock);
-		Mockito.verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
+		verify(this.statementClientFactory, Mockito.times(1)).build(Mockito.eq(mock), Mockito.any());
 	}
 	
 	@Test
@@ -234,7 +246,7 @@ public class StatementMethodInterceptorTest extends StatementMethodInterceptor {
 		ApplicationContext x = this.applicationContext;
 		this.applicationContext = Mockito.mock(ApplicationContext.class);
 		StatementClient statementClient2 = Mockito.mock(StatementClient.class);
-		Mockito.when(applicationContext.getBean(Mockito.eq(StatementClient.class))).thenReturn(statementClient2);
+		when(applicationContext.getBean(Mockito.eq(StatementClient.class))).thenReturn(statementClient2);
 		this.afterPropertiesSet();
 		Assert.assertEquals(statementClient2, statementClientFactory.build(null, null));
 		this.applicationContext = x;
@@ -247,7 +259,7 @@ public class StatementMethodInterceptorTest extends StatementMethodInterceptor {
 		ApplicationContext x = this.applicationContext;
 		this.applicationContext = Mockito.mock(ApplicationContext.class);
 		StatementClient statementClient2 = Mockito.mock(StatementClient.class);
-		Mockito.when(applicationContext.getBean(Mockito.eq(StatementClient.class))).thenReturn(null);
+		when(applicationContext.getBean(Mockito.eq(StatementClient.class))).thenReturn(null);
 		this.afterPropertiesSet();
 	}
 	

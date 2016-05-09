@@ -177,6 +177,7 @@ public class StatementGeneratorMethodInterceptorTest extends StatementGeneratorM
 		for (int i = 0; i < 100; i++) {
 			invoke(mock);
 		}
+		destroy();
 		Mockito.verify(this.statementClient, Mockito.times(100)).postStatement(Mockito.<gov.adlnet.xapi.model.Statement>any());
 	}
 	@Test

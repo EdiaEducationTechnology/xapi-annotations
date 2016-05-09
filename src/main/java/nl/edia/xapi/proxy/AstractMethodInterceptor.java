@@ -17,16 +17,19 @@ package nl.edia.xapi.proxy;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.Assert;
 
 import gov.adlnet.xapi.client.StatementClient;
 
-public abstract class AstractMethodInterceptor implements MethodInterceptor, ApplicationContextAware {
+public abstract class AstractMethodInterceptor implements MethodInterceptor, DisposableBean, ApplicationContextAware {
 
 	/**
 	 * A reference to the log facility.
@@ -70,6 +73,8 @@ public abstract class AstractMethodInterceptor implements MethodInterceptor, App
 	 * @param statement the statement to be sent.
 	 */
 	public void send(final StatementClient client, final gov.adlnet.xapi.model.Statement statement) {
+		Assert.notNull(client, "The StatementClient cannot be null");
+		Assert.notNull(statement, "The Statement cannot be null");
 		if (aSync) {
 			executorService.execute(new Runnable() {
 				/* (non-Javadoc)
@@ -108,6 +113,13 @@ public abstract class AstractMethodInterceptor implements MethodInterceptor, App
 
 	public void setaSync(boolean aSync) {
 		this.aSync = aSync;
+	}
+	
+	public void destroy() throws Exception {
+		if (executorService != null) {
+			executorService.shutdownNow();
+			executorService.awaitTermination(60, TimeUnit.SECONDS);
+		}
 	}
 
 }

@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import gov.adlnet.xapi.client.StatementClient;
 import nl.edia.xapi.annotation.StatementGenerator;
 import nl.edia.xapi.statements.NullStatementGenerator;
 import nl.edia.xapi.statements.StatementClientFactory;
@@ -69,8 +70,9 @@ public class StatementGeneratorMethodInterceptor extends AstractMethodIntercepto
 				String verb = annotation.verb();
 				Map<Class<?>, Object> values = AopReflectionUtils.getParameterClassesAndValues(invocation, returnValue);
 				gov.adlnet.xapi.model.Statement statement = bean.generate(verb, returnValue, values);
-				if (statement != null) {
-					send(statementClientFactory.build(invocation, returnValue), statement);
+				StatementClient statementClient = statementClientFactory.build(invocation, returnValue);
+				if (statement != null && statementClient != null) {
+					send(statementClient, statement);
 				}
 			}
 		}

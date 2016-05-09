@@ -16,6 +16,7 @@ package nl.edia.xapi.proxy;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Before;
@@ -166,5 +167,35 @@ public class StatementGeneratorMethodInterceptorTest extends StatementGeneratorM
 		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), text, Mockito.mock(Course.class), Mockito.mock(Module.class) });
 		invoke(mock);
 		Mockito.verify(this.statementClientFactory, Mockito.times(0)).build(Mockito.eq(mock), Mockito.any());
+	}
+	
+	@Test
+	public void testLoad() throws Throwable {
+		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
+		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1"));
+		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		for (int i = 0; i < 100; i++) {
+			invoke(mock);
+		}
+		Mockito.verify(this.statementClient, Mockito.times(100)).postStatement(Mockito.<gov.adlnet.xapi.model.Statement>any());
+	}
+	@Test
+	public void testErrorLoad() throws Throwable {
+		MethodInvocation mock = Mockito.mock(MethodInvocation.class);
+		Mockito.when(mock.getMethod()).thenReturn(getMethod("doSomeThing1"));
+		Mockito.when(mock.getArguments()).thenReturn(new Object[] { Mockito.mock(User.class), Mockito.mock(Course.class), Mockito.mock(Module.class) });
+		Mockito.when(statementClient.postStatement(Mockito.<gov.adlnet.xapi.model.Statement>any())).thenThrow(NullPointerException.class);
+		for (int i = 0; i < 100; i++) {
+			invoke(mock);
+		}
+		
+		destroy();
+		Mockito.verify(this.statementClient, Mockito.times(100)).postStatement(Mockito.<gov.adlnet.xapi.model.Statement>any());
+	}
+	
+	@Override
+	public void destroy() throws Exception {
+		executorService.shutdown();
+		executorService.awaitTermination(50, TimeUnit.SECONDS);	
 	}
 }

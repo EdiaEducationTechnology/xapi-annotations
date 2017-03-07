@@ -35,7 +35,7 @@ Configure the spring proxy inside one of you spring XML configuration files
 or use the annotation based configurtion
 ```
 	@Configuration
-	@ComponentScan(basePackages = "nl.edia.xapi.proxy.impl")
+	@ComponentScan(basePackages = "nl.edia.xapi.proxy")
 	public class MyConfiguration {
 		@Bean public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
 			return new DefaultAdvisorAutoProxyCreator();

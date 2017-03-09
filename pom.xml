@@ -12,10 +12,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/gov.adlnet/jxapi -->
 		<dependency>
-			<groupId>gov.adlnet.xapi</groupId>
-			<artifactId>xapi</artifactId>
-			<version>0.1.4</version>
+			<groupId>gov.adlnet</groupId>
+			<artifactId>jxapi</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>aopalliance</groupId>

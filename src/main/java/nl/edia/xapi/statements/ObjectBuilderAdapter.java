@@ -14,19 +14,15 @@
  */
 package nl.edia.xapi.statements;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
+import gov.adlnet.xapi.model.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 
-import gov.adlnet.xapi.model.Actor;
-import gov.adlnet.xapi.model.Context;
-import gov.adlnet.xapi.model.IStatementObject;
-import gov.adlnet.xapi.model.Result;
-import gov.adlnet.xapi.model.Verb;
-import gov.adlnet.xapi.model.Verbs;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Adapter class for the {@link ObjectBuilder}.
@@ -87,11 +83,13 @@ public abstract class ObjectBuilderAdapter implements ObjectBuilder {
 	protected Verb buildVerb(Object value){
 		if (value instanceof String) {
 			String event = (String) value;
-			try {
-				Method method = Verbs.class.getMethod(event);
-				return (Verb) method.invoke(null, new Object[]{});
-			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				LOG.error("Error creating verb", e);
+			if (isNotEmpty(event)) {
+				try {
+					Method method = Verbs.class.getMethod(event);
+					return (Verb) method.invoke(null, new Object[]{});
+				} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					LOG.error("Error creating verb", e);
+				}
 			}
 		}
 		return null;

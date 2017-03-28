@@ -28,13 +28,13 @@ import nl.edia.xapi.statements.StatementBuilder;
 @Target(value=ElementType.METHOD)
 public @interface Statement {
 	
-	public enum ValidationStyle {
+	enum ValidationStyle {
 		strict,
 		lenient
 	}
 	
 	String verb();
-	
+
 	Class<? extends ObjectBuilder> objectBuilder() default NullObjectBuilder.class;
 
 	String objectBuilderBean() default "";

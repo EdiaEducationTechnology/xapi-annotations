@@ -14,11 +14,10 @@
  */
 package nl.edia.xapi.proxy;
 
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
+import gov.adlnet.xapi.client.StatementClient;
+import gov.adlnet.xapi.model.*;
+import nl.edia.xapi.annotation.Statement;
+import nl.edia.xapi.statements.*;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
@@ -29,19 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import gov.adlnet.xapi.client.StatementClient;
-import gov.adlnet.xapi.model.Actor;
-import gov.adlnet.xapi.model.Context;
-import gov.adlnet.xapi.model.IStatementObject;
-import gov.adlnet.xapi.model.Result;
-import gov.adlnet.xapi.model.Verb;
-import nl.edia.xapi.annotation.Statement;
-import nl.edia.xapi.statements.DefaultStatementBuilder;
-import nl.edia.xapi.statements.DefaultStatementClientFactory;
-import nl.edia.xapi.statements.NullObjectBuilder;
-import nl.edia.xapi.statements.ObjectBuilder;
-import nl.edia.xapi.statements.StatementBuilder;
-import nl.edia.xapi.statements.StatementClientFactory;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 @Component
 public class StatementMethodInterceptor extends AstractMethodInterceptor implements InitializingBean, Serializable {
@@ -111,11 +101,16 @@ public class StatementMethodInterceptor extends AstractMethodInterceptor impleme
 		ObjectBuilder objectBuilder = getObjectBuilder(statementAnnotation);
 		StatementBuilder statementBuilder = getStatementBuilder(statementAnnotation);
 		Assert.notNull(objectBuilder, "An ObjectBuilder is required, please provide an instance of the ObjectBuilder as a bean.");
-		// Required
+
+		// Actor: Required
 		Actor actor = findValueForType(nl.edia.xapi.annotation.Actor.class, invocation, returnValue, Actor.class, objectBuilder);
-		// Required
-		Verb verb = objectBuilder.build(statementAnnotation.verb(), Verb.class);
-		// Required
+
+		// Verb: Required
+		// First check if there is an annotated @Verb verb set and fetchable, than check for the verb on the statement annotation
+		Verb verb = findValueForType(nl.edia.xapi.annotation.Verb.class, invocation, returnValue, Verb.class, objectBuilder);
+		verb = verb != null ? verb : objectBuilder.build(statementAnnotation.verb(), Verb.class);
+
+		// IStatementObject: Required
 		IStatementObject object = findValueForType(nl.edia.xapi.annotation.StatementObject.class, invocation, returnValue, IStatementObject.class, objectBuilder);
 
 		if (actor != null && verb != null && object != null) {

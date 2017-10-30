@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>gov.adlnet</groupId>
 			<artifactId>jxapi</artifactId>
-			<version>1.0.3</version>
+			<version>1.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>aopalliance</groupId>

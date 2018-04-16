@@ -92,11 +92,11 @@
 	<distributionManagement>
 		<repository>
 			<id>public</id>
-			<url>http://nexus.edia.nl/nexus/content/repositories/public</url>
+			<url>https://nexus.int.edia.nl/repository/public</url>
 		</repository>
 		<snapshotRepository>
 			<id>public-snapshots</id>
-			<url>http://nexus.edia.nl/nexus/content/repositories/public-snapshots</url>
+			<url>https://nexus.int.edia.nl/repository/public-snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>

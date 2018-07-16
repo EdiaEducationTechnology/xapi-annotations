@@ -49,6 +49,9 @@ public class DefaultStatementBuilder implements StatementBuilder {
 	 * @see eu.knowble.leaninganalytics.statements.StatementBuilder#build(gov.adlnet.xapi.model.Actor, gov.adlnet.xapi.model.Verb, gov.adlnet.xapi.model.IStatementObject, gov.adlnet.xapi.model.Result, gov.adlnet.xapi.model.Context, gov.adlnet.xapi.model.Actor, java.util.Collection)
 	 */
 	public Statement build(Actor actor, Verb verb, IStatementObject object, Result result, Context context, Actor authority, Collection<Attachment> attachments) {
+		if (actor == null || verb == null || object == null) {
+			return null;
+		}
 		Statement st = new Statement();
 		st.setActor(actor);
 		st.setId(UUID.randomUUID().toString());
